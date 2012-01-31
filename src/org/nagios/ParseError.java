@@ -12,5 +12,4 @@ public class ParseError extends Exception {
     super(string);
   }
 
-
 }
