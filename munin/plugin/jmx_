@@ -45,7 +45,7 @@ if [ "$jmxurl" = "" ]; then
 else
 
 fi
-echo $SERVICE
+
 # checks
 test -z $CONFIGNAME || test -z "$RDIR" && exit 1
 
