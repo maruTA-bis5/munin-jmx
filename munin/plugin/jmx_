@@ -25,6 +25,10 @@
 # [jmx_*]
 # env.jmxurl service:jmx:rmi:///jndi/rmi://localhost:1616/jmxrmi
 #
+# If you want to monitor local jvm process, you can set the keyword to find process id.
+# [jmx_*]
+# env.jmxprocesshint fqcn.to.monitor.Process
+#
 # Read more on JMX configuring at http://java.sun.com/j2se/1.5.0/docs/guide/management/agent.html
 # $Log$
 # 
@@ -33,11 +37,15 @@ CONFIGNAME=`basename $0 | sed 's/^jmx_//g'`.conf
 RDIR=`dirname $LINK`
 
 if [ "$jmxurl" = "" ]; then
-SERVICE=service:jmx:rmi:///jndi/rmi://localhost:1616/jmxrmi
+	if [ "$jmxprocesshint" = "" ]; then
+		SERVICE=service:jmx:rmi:///jndi/rmi://localhost:1616/jmxrmi
+	else
+		SERVICE=$(jcmd | grep "$jmxprocesshint" | sed "s/ .*$//")
+	fi
 else
-SERVICE="$jmxurl"
-fi
 
+fi
+echo $SERVICE
 # checks
 test -z $CONFIGNAME || test -z "$RDIR" && exit 1
 
