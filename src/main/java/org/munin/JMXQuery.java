@@ -1,5 +1,8 @@
 package org.munin;
 
+import com.sun.tools.attach.AttachNotSupportedException;
+import com.sun.tools.attach.VirtualMachine;
+
 import java.io.IOException;
 import java.text.NumberFormat;
 import java.util.Arrays;
@@ -136,10 +139,10 @@ public class JMXQuery {
 	/**
 	 * @param args
 	 */
-	public static void main(String[] args) {
+	public static void main(String[] args) throws Exception {
 		if(args.length<1)
 			System.err.println("Usage of program is:\n"+
-					"java -cp jmxquery.jar org.munin.JMXQuery <URL> [[<config file>] config]\n"+
+					"java -cp jmxquery.jar org.munin.JMXQuery (<URL>|<PID>) [[<config file>] config]\n"+
 					", where <URL> is a JMX URL, for example: service:jmx:rmi:///jndi/rmi://HOST:PORT/jmxrmi\n"+
 					"When invoked with the config file (look examples folder) - operates as Munin plugin with the proviuded configuration\n"+
 					"Without options just fetches all JMX attributes using provided URL");
@@ -156,25 +159,37 @@ public class JMXQuery {
 				System.exit(1);
 			} 
 		}else{
-			JMXQuery query = new JMXQuery(url);
+			String jmxUrl = resolveUrl(url);
+			JMXQuery query = new JMXQuery(jmxUrl);
 			try{
 				query.connect();
 				if(config_file!=null)
 					query.setConfig(Configuration.parse(config_file));
 				query.list();
 			}catch(Exception ex){
-				System.err.println(ex.getMessage()+" querying "+ url);
+				System.err.println(ex.getMessage()+" querying "+ jmxUrl);
 				ex.printStackTrace();
 				System.exit(1);
 			}finally{
 				try {
 					query.disconnect();
 				} catch (IOException e) {
-					System.err.println(e.getMessage()+" closing "+ url);
+					System.err.println(e.getMessage()+" closing "+ jmxUrl);
 				}
 			}			
 		}
 		
+	}
+
+	private static String resolveUrl(String url) throws IOException, AttachNotSupportedException {
+		try {
+			// try parse
+			Integer.parseInt(url);
+			VirtualMachine vm = VirtualMachine.attach(url);
+			return vm.startLocalManagementAgent();
+		}catch(NumberFormatException ignore){
+			return url;
+		}
 	}
 
 	private void setConfig(Configuration configuration) {
