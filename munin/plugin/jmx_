@@ -43,7 +43,7 @@ if [ "$jmxurl" = "" ]; then
 		SERVICE=$(jcmd | grep "$jmxprocesshint" | sed "s/ .*$//")
 	fi
 else
-
+SERVICE="$jmxurl"
 fi
 
 # checks
